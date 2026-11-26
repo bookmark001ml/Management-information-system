@@ -1,13 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
-import { Menu, X, ChevronDown, ArrowRight } from 'lucide-react';
+import { Menu, X, ChevronDown, ArrowRight, Sun, Moon } from 'lucide-react';
 import { MIS_TOPICS } from '../data/misTopics';
 import { OPERATIONS_TOPICS } from '../data/operationsTopics';
 import { COMPETITIVE_TOPICS } from '../data/competitiveTopics';
 import { DECISION_TOPICS } from '../data/decisionTopics';
+import { OS_TOPICS } from '../data/osTopics';
 
 interface NavbarProps {
-  activeSection: 'importance' | 'operations' | 'competitive' | 'decision';
+  activeSection: 'importance' | 'operations' | 'competitive' | 'decision' | 'software';
   activeSlug: string | null;
+  theme: 'dark' | 'light';
+  onToggleTheme: () => void;
   onNavigateHome: () => void;
   onNavigateTopic: (slug: string) => void;
   onNavigateOperations: () => void;
@@ -16,11 +19,14 @@ interface NavbarProps {
   onNavigateCompetitiveTopic: (slug: string) => void;
   onNavigateDecision: () => void;
   onNavigateDecisionTopic: (slug: string) => void;
+  onNavigateSoftwareOs: (slug?: string) => void;
 }
 
 export function Navbar({
   activeSection,
   activeSlug,
+  theme,
+  onToggleTheme,
   onNavigateHome,
   onNavigateTopic,
   onNavigateOperations,
@@ -29,9 +35,13 @@ export function Navbar({
   onNavigateCompetitiveTopic,
   onNavigateDecision,
   onNavigateDecisionTopic,
+  onNavigateSoftwareOs,
 }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [topicsOpen, setTopicsOpen] = useState(false);
+  const [mobileSoftwareOpen, setMobileSoftwareOpen] = useState(
+    activeSection === 'software'
+  );
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -51,7 +61,9 @@ export function Navbar({
         ? COMPETITIVE_TOPICS
         : activeSection === 'decision'
           ? DECISION_TOPICS
-          : MIS_TOPICS;
+          : activeSection === 'software'
+            ? OS_TOPICS
+            : MIS_TOPICS;
 
   const currentIdx = activeSlug
     ? currentList.findIndex((t) => t.slug === activeSlug)
@@ -70,6 +82,8 @@ export function Navbar({
       onNavigateCompetitiveTopic(slug);
     } else if (activeSection === 'decision') {
       onNavigateDecisionTopic(slug);
+    } else if (activeSection === 'software') {
+      onNavigateSoftwareOs(slug);
     } else {
       onNavigateTopic(slug);
     }
@@ -155,18 +169,33 @@ export function Navbar({
             Decision-Making
           </button>
 
+          <button
+            type="button"
+            onClick={() => {
+              setTopicsOpen(false);
+              onNavigateSoftwareOs();
+            }}
+            className={`whitespace-nowrap shrink-0 transition-colors cursor-pointer py-1 border-b-2 ${
+              activeSection === 'software'
+                ? 'text-cyan-300 border-cyan-400'
+                : 'border-transparent hover:text-white'
+            }`}
+          >
+            Software
+          </button>
+
           <div ref={dropdownRef} className="relative">
             <button
               type="button"
               onClick={() => setTopicsOpen((o) => !o)}
               aria-expanded={topicsOpen}
               className={`inline-flex items-center gap-1 whitespace-nowrap shrink-0 transition-colors cursor-pointer py-1 border-b-2 ${
-                activeSlug !== null
+                activeSlug !== null && activeSection !== 'software'
                   ? 'text-white border-amber-500'
                   : 'border-transparent hover:text-white'
               }`}
             >
-              <span>All Missions</span>
+              <span>Topics</span>
               <ChevronDown
                 className={`w-3.5 h-3.5 transition-transform duration-150 ${
                   topicsOpen ? 'rotate-180' : ''
@@ -176,15 +205,17 @@ export function Navbar({
             </button>
 
             {topicsOpen && (
-              <div className="absolute left-0 mt-3 w-80 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-2 z-50">
+              <div className="absolute right-0 mt-3 w-80 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-2 z-50">
                 <div className="px-3 py-1.5 text-xs font-medium text-slate-400 border-b border-slate-800 mb-1">
                   {activeSection === 'operations'
-                    ? '6 Business Operations Missions'
+                    ? '6 Business Operations'
                     : activeSection === 'competitive'
-                      ? '8 Competitive Advantage Missions'
+                      ? '8 Competitive Advantage'
                       : activeSection === 'decision'
-                        ? '7 Decision-Making Missions'
-                        : '8 Importance of MIS Missions'}
+                        ? '7 Decision-Making'
+                        : activeSection === 'software'
+                          ? '8 Types of Operating System'
+                          : '8 Importance of MIS'}
                 </div>
                 <div className="space-y-0.5">
                   {currentList.map((topic) => {
@@ -213,14 +244,35 @@ export function Navbar({
           </div>
         </nav>
 
-        {/* Zone 3: 1 primary action (Desktop) + Mobile Menu Trigger */}
+        {/* Zone 3: Theme Toggle + 1 primary action (Desktop) + Mobile Menu Trigger */}
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-pressed={theme === 'light'}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+          >
+            {theme === 'dark' ? (
+              <>
+                <Sun className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />
+                <span className="hidden sm:inline">Light</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-3.5 h-3.5 text-cyan-400" aria-hidden="true" />
+                <span className="hidden sm:inline">Dark</span>
+              </>
+            )}
+          </button>
+
           <button
             type="button"
             onClick={() => handleSelectTopic(nextTopic.slug)}
             className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-slate-950 bg-amber-500 rounded-lg hover:bg-amber-400 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
           >
-            <span>{activeSlug ? `Next: ${nextTopic.shortTitle}` : 'Play Mission 01'}</span>
+            <span>{activeSlug ? `Next: ${nextTopic.shortTitle}` : 'Start 01'}</span>
             <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
 
@@ -306,6 +358,46 @@ export function Navbar({
             <span>Role of MIS in Decision-Making</span>
             <ArrowRight className="w-4 h-4 shrink-0" aria-hidden="true" />
           </button>
+
+          <div className="space-y-1.5">
+            <button
+              type="button"
+              onClick={() => setMobileSoftwareOpen((o) => !o)}
+              className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-semibold cursor-pointer min-h-[44px] ${
+                activeSection === 'software'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                  : 'bg-slate-800 text-white hover:bg-slate-700'
+              }`}
+            >
+              <span>Software</span>
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${
+                  mobileSoftwareOpen ? 'rotate-180' : ''
+                }`}
+                aria-hidden="true"
+              />
+            </button>
+
+            {mobileSoftwareOpen && (
+              <div className="pl-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    onNavigateSoftwareOs();
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold cursor-pointer min-h-[44px] ${
+                    activeSection === 'software'
+                      ? 'bg-cyan-500 text-slate-950 font-bold'
+                      : 'bg-slate-800/70 text-slate-200 hover:bg-slate-700'
+                  }`}
+                >
+                  <span>Types of Operating System</span>
+                  <ArrowRight className="w-4 h-4 shrink-0" aria-hidden="true" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </header>

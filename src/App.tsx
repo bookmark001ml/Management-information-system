@@ -4,6 +4,7 @@ import { MIS_TOPICS } from './data/misTopics';
 import { OPERATIONS_TOPICS } from './data/operationsTopics';
 import { COMPETITIVE_TOPICS } from './data/competitiveTopics';
 import { DECISION_TOPICS } from './data/decisionTopics';
+import { OS_TOPICS } from './data/osTopics';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { OverviewPage } from './components/OverviewPage';
@@ -14,16 +15,31 @@ import { CompetitiveOverviewPage } from './components/CompetitiveOverviewPage';
 import { CompetitiveTopicPage } from './components/CompetitiveTopicPage';
 import { DecisionOverviewPage } from './components/DecisionOverviewPage';
 import { DecisionTopicPage } from './components/DecisionTopicPage';
+import { OsLearningLabPage } from './components/software/OsLearningLabPage';
 import { soundFx } from './utils/soundFx';
 
 interface RouteState {
-  section: 'importance' | 'operations' | 'competitive' | 'decision';
+  section: 'importance' | 'operations' | 'competitive' | 'decision' | 'software';
   slug: string | null;
+  osComplete?: boolean;
 }
 
 function getRouteFromHash(): RouteState {
   const hash = window.location.hash.replace(/^#\/?/, '');
   if (!hash) return { section: 'importance', slug: null };
+
+  if (hash === 'software' || hash.startsWith('software/')) {
+    const rest = hash.replace(/^software\/?(?:os\/?)?/, '');
+    if (rest === 'complete') {
+      return { section: 'software', slug: null, osComplete: true };
+    }
+    const matched = OS_TOPICS.find((t) => t.slug === rest);
+    return {
+      section: 'software',
+      slug: matched ? matched.slug : OS_TOPICS[0].slug,
+      osComplete: false,
+    };
+  }
 
   if (hash === 'operations' || hash.startsWith('operations/')) {
     const clean = hash.replace(/^operations\/?/, '');
@@ -57,12 +73,34 @@ export default function App() {
   const [opsClearedSlugs, setOpsClearedSlugs] = useState<string[]>([]);
   const [compClearedSlugs, setCompClearedSlugs] = useState<string[]>([]);
   const [decisionClearedSlugs, setDecisionClearedSlugs] = useState<string[]>([]);
+  const [osExploredSlugs, setOsExploredSlugs] = useState<string[]>([]);
   const [bakeryCash, setBakeryCash] = useState<number>(50000);
   const [soundOn, setSoundOn] = useState<boolean>(true);
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    try {
+      return localStorage.getItem('theme-mode') === 'light' ? 'light' : 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
 
   useEffect(() => {
     soundFx.enabled = soundOn;
   }, [soundOn]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('light', theme === 'light');
+    try {
+      localStorage.setItem('theme-mode', theme);
+    } catch {
+      // ignore storage errors
+    }
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    soundFx.playClick();
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
 
   useEffect(() => {
     const onHashChange = () => {
@@ -121,6 +159,19 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const navigateToSoftwareOs = (slug?: string) => {
+    const targetSlug = slug ?? OS_TOPICS[0].slug;
+    window.location.hash = `/software/os/${targetSlug}`;
+    setRoute({ section: 'software', slug: targetSlug, osComplete: false });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToSoftwareOsComplete = () => {
+    window.location.hash = '/software/os/complete';
+    setRoute({ section: 'software', slug: null, osComplete: true });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleCompleteMission = (slug: string, rewardNpr: number) => {
     setClearedSlugs((prev) => {
       if (prev.includes(slug)) return prev;
@@ -153,6 +204,10 @@ export default function App() {
     });
   };
 
+  const handleMarkOsExplored = (slug: string) => {
+    setOsExploredSlugs((prev) => (prev.includes(slug) ? prev : [...prev, slug]));
+  };
+
   const handleResetProgress = () => {
     setClearedSlugs([]);
     setOpsClearedSlugs([]);
@@ -168,6 +223,11 @@ export default function App() {
     } else {
       navigateToHome();
     }
+  };
+
+  const handleResetOsLab = () => {
+    setOsExploredSlugs([]);
+    navigateToSoftwareOs(OS_TOPICS[0].slug);
   };
 
   const activeImportanceTopic =
@@ -219,6 +279,8 @@ export default function App() {
       <Navbar
         activeSection={route.section}
         activeSlug={route.slug}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
         onNavigateHome={navigateToHome}
         onNavigateTopic={navigateToTopic}
         onNavigateOperations={navigateToOperations}
@@ -227,61 +289,64 @@ export default function App() {
         onNavigateCompetitiveTopic={navigateToCompetitiveTopic}
         onNavigateDecision={navigateToDecision}
         onNavigateDecisionTopic={navigateToDecisionTopic}
+        onNavigateSoftwareOs={navigateToSoftwareOs}
       />
 
-      {/* Compact Unobtrusive Game HUD Strip */}
-      <div className="bg-slate-900/90 border-b border-slate-800">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-5 font-mono tabular-nums">
-            <div>
-              <span className="text-slate-400 mr-1.5">
-                {route.section === 'importance' ? 'BAKERY BANK:' : 'SMARTMART BANK:'}
-              </span>
-              <span className="font-bold text-amber-400">
-                NPR {bakeryCash.toLocaleString()}
-              </span>
+      {/* Compact HUD Strip (Hidden inside Software OS Lab to avoid gamification/points) */}
+      {route.section !== 'software' && (
+        <div className="bg-slate-900/90 border-b border-slate-800">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-5 font-mono tabular-nums">
+              <div>
+                <span className="text-slate-400 mr-1.5">
+                  {route.section === 'importance' ? 'BAKERY BANK:' : 'SMARTMART BANK:'}
+                </span>
+                <span className="font-bold text-amber-400">
+                  NPR {bakeryCash.toLocaleString()}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-400 mr-1.5">MISSIONS CLEARED:</span>
+                <span className="font-bold text-emerald-400">
+                  {currentClearedCount} / {currentTotalCount}
+                </span>
+              </div>
             </div>
-            <div>
-              <span className="text-slate-400 mr-1.5">MISSIONS CLEARED:</span>
-              <span className="font-bold text-emerald-400">
-                {currentClearedCount} / {currentTotalCount}
-              </span>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setSoundOn((s) => !s)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer"
-              aria-label={soundOn ? 'Mute game sound effects' : 'Enable game sound effects'}
-            >
-              {soundOn ? (
-                <>
-                  <Volume2 className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
-                  <span>Sound ON</span>
-                </>
-              ) : (
-                <>
-                  <VolumeX className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
-                  <span>Muted</span>
-                </>
-              )}
-            </button>
-
-            {hasAnyProgress && (
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={handleResetProgress}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer"
+                onClick={() => setSoundOn((s) => !s)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer"
+                aria-label={soundOn ? 'Mute sound effects' : 'Enable sound effects'}
               >
-                <RotateCcw className="w-3 h-3" aria-hidden="true" />
-                <span>Reset</span>
+                {soundOn ? (
+                  <>
+                    <Volume2 className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
+                    <span>Sound ON</span>
+                  </>
+                ) : (
+                  <>
+                    <VolumeX className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
+                    <span>Muted</span>
+                  </>
+                )}
               </button>
-            )}
+
+              {hasAnyProgress && (
+                <button
+                  type="button"
+                  onClick={handleResetProgress}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer"
+                >
+                  <RotateCcw className="w-3 h-3" aria-hidden="true" />
+                  <span>Reset</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="flex-1 flex">
         <Sidebar
@@ -290,10 +355,21 @@ export default function App() {
           onNavigateOperations={navigateToOperations}
           onNavigateCompetitive={navigateToCompetitive}
           onNavigateDecision={navigateToDecision}
+          onNavigateSoftwareOs={() => navigateToSoftwareOs()}
         />
 
         <main className="flex-1 min-w-0">
-          {route.section === 'operations' ? (
+          {route.section === 'software' ? (
+            <OsLearningLabPage
+              activeSlug={route.slug}
+              isCompleteScreen={Boolean(route.osComplete)}
+              exploredSlugs={osExploredSlugs}
+              onMarkExplored={handleMarkOsExplored}
+              onSelectTopic={(slug) => navigateToSoftwareOs(slug)}
+              onSelectComplete={navigateToSoftwareOsComplete}
+              onResetLab={handleResetOsLab}
+            />
+          ) : route.section === 'operations' ? (
             activeOperationsTopic ? (
               <OperationsTopicPage
                 topic={activeOperationsTopic}
@@ -362,35 +438,37 @@ export default function App() {
       <footer className="border-t border-slate-800 bg-slate-900">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <p className="font-display text-sm font-bold text-white">
-            {route.section === 'operations'
-              ? 'SmartMart · Role of MIS in Business Operations'
-              : route.section === 'competitive'
-                ? 'SmartMart · Role of MIS in Competitive Advantage'
-                : route.section === 'decision'
-                  ? 'SmartMart · Role of MIS in Decision-Making'
-                  : 'Kathmandu Bakery · MIS Tycoon'}
+            {route.section === 'software'
+              ? 'Software Lab · Types of Operating Systems'
+              : route.section === 'operations'
+                ? 'SmartMart · Role of MIS in Business Operations'
+                : route.section === 'competitive'
+                  ? 'SmartMart · Role of MIS in Competitive Advantage'
+                  : route.section === 'decision'
+                    ? 'SmartMart · Role of MIS in Decision-Making'
+                    : 'Kathmandu Bakery · MIS Tycoon'}
           </p>
 
           <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-400">
-            {route.section === 'operations'
-              ? OPERATIONS_TOPICS.map((topic) => (
+            {route.section === 'software'
+              ? OS_TOPICS.map((topic) => (
                   <button
                     key={topic.id}
                     type="button"
-                    onClick={() => navigateToOperationTopic(topic.slug)}
+                    onClick={() => navigateToSoftwareOs(topic.slug)}
                     className={`hover:text-white transition-colors cursor-pointer whitespace-nowrap ${
-                      route.slug === topic.slug ? 'font-semibold text-amber-400' : ''
+                      route.slug === topic.slug ? 'font-semibold text-cyan-400' : ''
                     }`}
                   >
                     {topic.index}. {topic.shortTitle}
                   </button>
                 ))
-              : route.section === 'competitive'
-                ? COMPETITIVE_TOPICS.map((topic) => (
+              : route.section === 'operations'
+                ? OPERATIONS_TOPICS.map((topic) => (
                     <button
                       key={topic.id}
                       type="button"
-                      onClick={() => navigateToCompetitiveTopic(topic.slug)}
+                      onClick={() => navigateToOperationTopic(topic.slug)}
                       className={`hover:text-white transition-colors cursor-pointer whitespace-nowrap ${
                         route.slug === topic.slug ? 'font-semibold text-amber-400' : ''
                       }`}
@@ -398,12 +476,12 @@ export default function App() {
                       {topic.index}. {topic.shortTitle}
                     </button>
                   ))
-                : route.section === 'decision'
-                  ? DECISION_TOPICS.map((topic) => (
+                : route.section === 'competitive'
+                  ? COMPETITIVE_TOPICS.map((topic) => (
                       <button
                         key={topic.id}
                         type="button"
-                        onClick={() => navigateToDecisionTopic(topic.slug)}
+                        onClick={() => navigateToCompetitiveTopic(topic.slug)}
                         className={`hover:text-white transition-colors cursor-pointer whitespace-nowrap ${
                           route.slug === topic.slug ? 'font-semibold text-amber-400' : ''
                         }`}
@@ -411,18 +489,31 @@ export default function App() {
                         {topic.index}. {topic.shortTitle}
                       </button>
                     ))
-                  : MIS_TOPICS.map((topic) => (
-                      <button
-                        key={topic.id}
-                        type="button"
-                        onClick={() => navigateToTopic(topic.slug)}
-                        className={`hover:text-white transition-colors cursor-pointer whitespace-nowrap ${
-                          route.slug === topic.slug ? 'font-semibold text-amber-400' : ''
-                        }`}
-                      >
-                        {topic.index}. {topic.shortTitle}
-                      </button>
-                    ))}
+                  : route.section === 'decision'
+                    ? DECISION_TOPICS.map((topic) => (
+                        <button
+                          key={topic.id}
+                          type="button"
+                          onClick={() => navigateToDecisionTopic(topic.slug)}
+                          className={`hover:text-white transition-colors cursor-pointer whitespace-nowrap ${
+                            route.slug === topic.slug ? 'font-semibold text-amber-400' : ''
+                          }`}
+                        >
+                          {topic.index}. {topic.shortTitle}
+                        </button>
+                      ))
+                    : MIS_TOPICS.map((topic) => (
+                        <button
+                          key={topic.id}
+                          type="button"
+                          onClick={() => navigateToTopic(topic.slug)}
+                          className={`hover:text-white transition-colors cursor-pointer whitespace-nowrap ${
+                            route.slug === topic.slug ? 'font-semibold text-amber-400' : ''
+                          }`}
+                        >
+                          {topic.index}. {topic.shortTitle}
+                        </button>
+                      ))}
           </div>
         </div>
       </footer>

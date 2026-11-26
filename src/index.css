@@ -20,3 +20,192 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+/* Light Mode Theme Overrides (toggled via html.light) */
+html.light body {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+html.light .bg-slate-950,
+html.light .bg-slate-950\/90,
+html.light .bg-slate-950\/70,
+html.light .bg-slate-950\/60,
+html.light .bg-\[\#030612\] {
+  background-color: #f1f5f9;
+}
+
+html.light .bg-\[\#050a18\],
+html.light .bg-\[\#050b1c\]\/90 {
+  background-color: #ffffff;
+}
+
+html.light .bg-slate-900,
+html.light .bg-slate-900\/95,
+html.light .bg-slate-900\/90,
+html.light .bg-slate-900\/85,
+html.light .bg-slate-900\/80,
+html.light .bg-slate-900\/70,
+html.light .bg-slate-900\/60,
+html.light .bg-slate-900\/50 {
+  background-color: #ffffff;
+}
+
+html.light .bg-slate-800,
+html.light .bg-slate-800\/70,
+html.light .bg-slate-800\/40 {
+  background-color: #e2e8f0;
+}
+
+html.light .hover\:bg-slate-800:hover,
+html.light .hover\:bg-slate-700:hover {
+  background-color: #cbd5e1;
+}
+
+/* Colored dark-tint surfaces -> crisp light tints */
+html.light .bg-cyan-950\/60,
+html.light .bg-cyan-950\/50,
+html.light .bg-cyan-950\/45,
+html.light .bg-cyan-950\/40,
+html.light .bg-cyan-950\/35 {
+  background-color: rgba(207, 250, 254, 0.65);
+}
+
+html.light .bg-emerald-950\/60,
+html.light .bg-emerald-950\/50,
+html.light .bg-emerald-950\/45,
+html.light .bg-emerald-950\/40,
+html.light .bg-emerald-950\/35,
+html.light .bg-emerald-950\/30,
+html.light .bg-emerald-950\/25 {
+  background-color: rgba(209, 250, 229, 0.72);
+}
+
+html.light .bg-rose-950,
+html.light .bg-rose-950\/60,
+html.light .bg-rose-950\/50,
+html.light .bg-rose-950\/45,
+html.light .bg-rose-950\/40,
+html.light .bg-rose-950\/35,
+html.light .bg-rose-950\/30,
+html.light .bg-rose-950\/25,
+html.light .bg-rose-900\/50 {
+  background-color: rgba(255, 228, 230, 0.75);
+}
+
+html.light .bg-amber-950\/60,
+html.light .bg-amber-950\/40,
+html.light .bg-amber-950\/35 {
+  background-color: rgba(254, 243, 199, 0.78);
+}
+
+html.light .bg-purple-950\/60,
+html.light .bg-purple-950\/40 {
+  background-color: rgba(243, 232, 255, 0.78);
+}
+
+html.light .bg-sky-950\/60,
+html.light .bg-sky-950\/50,
+html.light .bg-sky-950\/35 {
+  background-color: rgba(224, 242, 254, 0.78);
+}
+
+/* Gradient overrides for light mode */
+html.light .from-\[\#0b1530\] {
+  --tw-gradient-from: #eff6ff;
+}
+html.light .from-\[\#07112a\] {
+  --tw-gradient-from: #ecfeff;
+}
+html.light .from-cyan-950\/50 {
+  --tw-gradient-from: rgba(207, 250, 254, 0.7);
+}
+html.light .via-\[\#050a18\] {
+  --tw-gradient-via: #ffffff;
+}
+html.light .via-\[\#091229\] {
+  --tw-gradient-via: #f8fafc;
+}
+html.light .to-slate-950 {
+  --tw-gradient-to: #f1f5f9;
+}
+html.light .to-\[\#120b29\] {
+  --tw-gradient-to: #f3e8ff;
+}
+html.light .to-purple-950\/40 {
+  --tw-gradient-to: rgba(243, 232, 255, 0.7);
+}
+
+/* Text ink colors for high contrast on light backgrounds */
+html.light .text-white,
+html.light .text-slate-100,
+html.light .text-slate-200,
+html.light .text-emerald-50,
+html.light .text-rose-50,
+html.light .text-cyan-100,
+html.light .text-purple-100,
+html.light .text-amber-100 {
+  color: #0f172a;
+}
+
+/* Keep white text inside solid dark/saturated accent buttons */
+html.light .bg-rose-600.text-white,
+html.light .bg-emerald-600.text-white {
+  color: #ffffff;
+}
+
+html.light .hover\:text-white:hover {
+  color: #0f172a;
+}
+
+html.light .text-slate-300 {
+  color: #334155;
+}
+
+html.light .text-slate-400,
+html.light .text-slate-500 {
+  color: #475569;
+}
+
+html.light .text-cyan-400,
+html.light .text-cyan-300,
+html.light .text-cyan-200 {
+  color: #0e7490;
+}
+
+html.light .text-emerald-400,
+html.light .text-emerald-300,
+html.light .text-emerald-200 {
+  color: #047857;
+}
+
+html.light .text-rose-400,
+html.light .text-rose-300,
+html.light .text-rose-200 {
+  color: #be123c;
+}
+
+html.light .text-amber-400,
+html.light .text-amber-300,
+html.light .text-amber-200 {
+  color: #b45309;
+}
+
+html.light .text-purple-400,
+html.light .text-purple-300,
+html.light .text-purple-200 {
+  color: #6d28d9;
+}
+
+html.light .text-sky-400,
+html.light .text-sky-300 {
+  color: #0369a1;
+}
+
+/* Borders */
+html.light .border-slate-800,
+html.light .border-slate-800\/80,
+html.light .border-slate-800\/70,
+html.light .border-slate-700 {
+  border-color: #cbd5e1;
+}
