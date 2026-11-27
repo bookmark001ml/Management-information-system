@@ -16,28 +16,40 @@ import { CompetitiveTopicPage } from './components/CompetitiveTopicPage';
 import { DecisionOverviewPage } from './components/DecisionOverviewPage';
 import { DecisionTopicPage } from './components/DecisionTopicPage';
 import { OsLearningLabPage } from './components/software/OsLearningLabPage';
+import { SoftwareConceptsPage } from './components/software/SoftwareConceptsPage';
+import { ComputerTypesPage } from './components/computers/ComputerTypesPage';
+import { COMPUTER_TYPE_NODES } from './data/computerTypes';
 import { soundFx } from './utils/soundFx';
 
 interface RouteState {
-  section: 'importance' | 'operations' | 'competitive' | 'decision' | 'software';
+  section: 'importance' | 'operations' | 'competitive' | 'decision' | 'software' | 'computers';
   slug: string | null;
   osComplete?: boolean;
+  softwareView?: 'concepts' | 'os';
 }
 
 function getRouteFromHash(): RouteState {
   const hash = window.location.hash.replace(/^#\/?/, '');
   if (!hash) return { section: 'importance', slug: null };
 
+  if (hash === 'computers' || hash.startsWith('computers/')) {
+    return { section: 'computers', slug: null };
+  }
+
   if (hash === 'software' || hash.startsWith('software/')) {
+    if (hash === 'software' || hash === 'software/concepts') {
+      return { section: 'software', slug: null, softwareView: 'concepts' };
+    }
     const rest = hash.replace(/^software\/?(?:os\/?)?/, '');
     if (rest === 'complete') {
-      return { section: 'software', slug: null, osComplete: true };
+      return { section: 'software', slug: null, osComplete: true, softwareView: 'os' };
     }
     const matched = OS_TOPICS.find((t) => t.slug === rest);
     return {
       section: 'software',
       slug: matched ? matched.slug : OS_TOPICS[0].slug,
       osComplete: false,
+      softwareView: 'os',
     };
   }
 
@@ -159,16 +171,28 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const navigateToSoftwareConcepts = () => {
+    window.location.hash = '/software/concepts';
+    setRoute({ section: 'software', slug: null, softwareView: 'concepts' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const navigateToSoftwareOs = (slug?: string) => {
     const targetSlug = slug ?? OS_TOPICS[0].slug;
     window.location.hash = `/software/os/${targetSlug}`;
-    setRoute({ section: 'software', slug: targetSlug, osComplete: false });
+    setRoute({ section: 'software', slug: targetSlug, osComplete: false, softwareView: 'os' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const navigateToSoftwareOsComplete = () => {
     window.location.hash = '/software/os/complete';
-    setRoute({ section: 'software', slug: null, osComplete: true });
+    setRoute({ section: 'software', slug: null, osComplete: true, softwareView: 'os' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToComputers = () => {
+    window.location.hash = '/computers';
+    setRoute({ section: 'computers', slug: null });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -278,22 +302,20 @@ export default function App() {
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
       <Navbar
         activeSection={route.section}
-        activeSlug={route.slug}
+        activeSoftwareSub={route.section === 'software' ? (route.softwareView ?? 'concepts') : null}
         theme={theme}
         onToggleTheme={handleToggleTheme}
         onNavigateHome={navigateToHome}
-        onNavigateTopic={navigateToTopic}
         onNavigateOperations={navigateToOperations}
-        onNavigateOperationTopic={navigateToOperationTopic}
         onNavigateCompetitive={navigateToCompetitive}
-        onNavigateCompetitiveTopic={navigateToCompetitiveTopic}
         onNavigateDecision={navigateToDecision}
-        onNavigateDecisionTopic={navigateToDecisionTopic}
+        onNavigateSoftwareConcepts={navigateToSoftwareConcepts}
         onNavigateSoftwareOs={navigateToSoftwareOs}
+        onNavigateComputers={navigateToComputers}
       />
 
-      {/* Compact HUD Strip (Hidden inside Software OS Lab to avoid gamification/points) */}
-      {route.section !== 'software' && (
+      {/* Compact HUD Strip (Hidden inside Software Lab & Computers 3D Explorer) */}
+      {route.section !== 'software' && route.section !== 'computers' && (
         <div className="bg-slate-900/90 border-b border-slate-800">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-5 font-mono tabular-nums">
@@ -351,24 +373,33 @@ export default function App() {
       <div className="flex-1 flex">
         <Sidebar
           activeSection={route.section}
+          activeSoftwareSub={route.section === 'software' ? (route.softwareView ?? 'concepts') : null}
           onNavigateHome={navigateToHome}
           onNavigateOperations={navigateToOperations}
           onNavigateCompetitive={navigateToCompetitive}
           onNavigateDecision={navigateToDecision}
+          onNavigateSoftwareConcepts={navigateToSoftwareConcepts}
           onNavigateSoftwareOs={() => navigateToSoftwareOs()}
+          onNavigateComputers={navigateToComputers}
         />
 
         <main className="flex-1 min-w-0">
-          {route.section === 'software' ? (
-            <OsLearningLabPage
-              activeSlug={route.slug}
-              isCompleteScreen={Boolean(route.osComplete)}
-              exploredSlugs={osExploredSlugs}
-              onMarkExplored={handleMarkOsExplored}
-              onSelectTopic={(slug) => navigateToSoftwareOs(slug)}
-              onSelectComplete={navigateToSoftwareOsComplete}
-              onResetLab={handleResetOsLab}
-            />
+          {route.section === 'computers' ? (
+            <ComputerTypesPage />
+          ) : route.section === 'software' ? (
+            route.softwareView === 'concepts' ? (
+              <SoftwareConceptsPage onNavigateToOsTypes={() => navigateToSoftwareOs()} />
+            ) : (
+              <OsLearningLabPage
+                activeSlug={route.slug}
+                isCompleteScreen={Boolean(route.osComplete)}
+                exploredSlugs={osExploredSlugs}
+                onMarkExplored={handleMarkOsExplored}
+                onSelectTopic={(slug) => navigateToSoftwareOs(slug)}
+                onSelectComplete={navigateToSoftwareOsComplete}
+                onResetLab={handleResetOsLab}
+              />
+            )
           ) : route.section === 'operations' ? (
             activeOperationsTopic ? (
               <OperationsTopicPage
@@ -438,19 +469,27 @@ export default function App() {
       <footer className="border-t border-slate-800 bg-slate-900">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <p className="font-display text-sm font-bold text-white">
-            {route.section === 'software'
-              ? 'Software Lab · Types of Operating Systems'
-              : route.section === 'operations'
-                ? 'SmartMart · Role of MIS in Business Operations'
-                : route.section === 'competitive'
-                  ? 'SmartMart · Role of MIS in Competitive Advantage'
-                  : route.section === 'decision'
-                    ? 'SmartMart · Role of MIS in Decision-Making'
-                    : 'Kathmandu Bakery · MIS Tycoon'}
+            {route.section === 'computers'
+              ? '3D Computer Explorer · Types of Computers'
+              : route.section === 'software'
+                ? 'Software Lab · Types of Operating Systems'
+                : route.section === 'operations'
+                  ? 'SmartMart · Role of MIS in Business Operations'
+                  : route.section === 'competitive'
+                    ? 'SmartMart · Role of MIS in Competitive Advantage'
+                    : route.section === 'decision'
+                      ? 'SmartMart · Role of MIS in Decision-Making'
+                      : 'Kathmandu Bakery · MIS Tycoon'}
           </p>
 
           <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-400">
-            {route.section === 'software'
+            {route.section === 'computers'
+              ? COMPUTER_TYPE_NODES.map((node) => (
+                  <span key={node.id} className="whitespace-nowrap">
+                    {node.shortName}
+                  </span>
+                ))
+              : route.section === 'software'
               ? OS_TOPICS.map((topic) => (
                   <button
                     key={topic.id}

@@ -7,27 +7,34 @@ import {
   Trophy,
   Compass,
   Cpu,
+  Monitor,
   ChevronDown,
   ChevronRight,
 } from 'lucide-react';
 import { soundFx } from '../utils/soundFx';
 
 interface SidebarProps {
-  activeSection: 'importance' | 'operations' | 'competitive' | 'decision' | 'software';
+  activeSection: 'importance' | 'operations' | 'competitive' | 'decision' | 'software' | 'computers';
+  activeSoftwareSub?: 'concepts' | 'os' | null;
   onNavigateHome: () => void;
   onNavigateOperations: () => void;
   onNavigateCompetitive: () => void;
   onNavigateDecision: () => void;
+  onNavigateSoftwareConcepts: () => void;
   onNavigateSoftwareOs: () => void;
+  onNavigateComputers: () => void;
 }
 
 export function Sidebar({
   activeSection,
+  activeSoftwareSub,
   onNavigateHome,
   onNavigateOperations,
   onNavigateCompetitive,
   onNavigateDecision,
+  onNavigateSoftwareConcepts,
   onNavigateSoftwareOs,
+  onNavigateComputers,
 }: SidebarProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [softwareOpen, setSoftwareOpen] = useState(
@@ -146,7 +153,7 @@ export function Sidebar({
           )}
         </button>
 
-        {/* Software Topic with Expandable Child Topic */}
+        {/* Software Topic with Expandable Child Topics */}
         <div className="space-y-1">
           <button
             type="button"
@@ -155,8 +162,15 @@ export function Sidebar({
               if (isSidebarCollapsed) {
                 setIsSidebarCollapsed(false);
                 setSoftwareOpen(true);
+                if (activeSection !== 'software') {
+                  onNavigateSoftwareConcepts();
+                }
               } else {
-                setSoftwareOpen((o) => !o);
+                const nextOpen = !softwareOpen;
+                setSoftwareOpen(nextOpen);
+                if (nextOpen && activeSection !== 'software') {
+                  onNavigateSoftwareConcepts();
+                }
               }
             }}
             aria-expanded={softwareOpen}
@@ -181,22 +195,39 @@ export function Sidebar({
 
           {!isSidebarCollapsed && softwareOpen && (
             <div className="pl-5 pt-0.5 space-y-1.5">
+              {/* Child 1 (Above Types of Operating System): Software Lecture Notes */}
+              <button
+                type="button"
+                onClick={() => {
+                  soundFx.playClick();
+                  onNavigateSoftwareConcepts();
+                }}
+                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  activeSection === 'software' && activeSoftwareSub === 'concepts'
+                    ? 'bg-cyan-500 text-slate-950 font-bold'
+                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                Software
+              </button>
+
+              {/* Child 2: Types of Operating System */}
               <button
                 type="button"
                 onClick={() => {
                   soundFx.playClick();
                   onNavigateSoftwareOs();
                 }}
-                aria-expanded={activeSection === 'software'}
+                aria-expanded={activeSection === 'software' && activeSoftwareSub === 'os'}
                 className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                  activeSection === 'software'
+                  activeSection === 'software' && activeSoftwareSub === 'os'
                     ? 'bg-cyan-500 text-slate-950 font-bold'
                     : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                 }`}
               >
                 Types of Operating System
               </button>
-              {activeSection === 'software' && (
+              {activeSection === 'software' && activeSoftwareSub === 'os' && (
                 <p className="px-3 py-1.5 text-[11px] leading-relaxed text-slate-300 bg-slate-950/70 border border-cyan-500/25 rounded-lg">
                   System software that manages hardware, memory, and programs so users and apps run smoothly.
                 </p>
@@ -204,6 +235,26 @@ export function Sidebar({
             </div>
           )}
         </div>
+
+        {/* Types of Computer (3D Tree Explorer) */}
+        <button
+          type="button"
+          onClick={() => {
+            soundFx.playClick();
+            onNavigateComputers();
+          }}
+          title="Types of Computer (3D Tree)"
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors cursor-pointer text-left ${
+            activeSection === 'computers'
+              ? 'bg-cyan-500 text-slate-950 font-bold'
+              : 'text-slate-200 hover:bg-slate-800 hover:text-white'
+          } ${isSidebarCollapsed ? 'justify-center px-0' : ''}`}
+        >
+          <Monitor className="w-4 h-4 shrink-0" aria-hidden="true" />
+          {!isSidebarCollapsed && (
+            <span className="leading-snug">Types of Computer</span>
+          )}
+        </button>
       </div>
     </aside>
   );

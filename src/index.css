@@ -209,3 +209,21 @@ html.light .border-slate-800\/70,
 html.light .border-slate-700 {
   border-color: #cbd5e1;
 }
+
+/* Keep dark WebGL stage HUD overlays crisp in Light Mode */
+html.light .webgl-hud {
+  background-color: #0b132b;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+html.light .webgl-hud .text-slate-100,
+html.light .webgl-hud .text-slate-200,
+html.light .webgl-hud .text-slate-300 {
+  color: #e2e8f0;
+}
+html.light .webgl-hud .bg-slate-800 {
+  background-color: #1e293b;
+}
+html.light .webgl-hud .hover\:bg-slate-700:hover {
+  background-color: #334155;
+}
